@@ -158,7 +158,7 @@ if [ $OS = "bullseye" ]; then
 		if [ ${v:1:2} -lt ${NODE_TESTED:1:2} ]; then
 			echo -e "\e[96minstalling correct version of node and npm, please wait\e[90m" | tee -a $logfile
 			nr=$(sudo npm install -g n)
-			sudo n i ${NODE_TESTED:1:2} >> $logfile
+			sudo n i ${NODE_TESTED:1:2} &>> $logfile
 			PATH="$PATH"
 			nodev=$(node -v)
 			if [ "${nodev:0:3}" != ${NODE_TESTED:0:3} ]; then
