@@ -364,10 +364,10 @@ if [ $doInstall == 1 ]; then
       sed '/node-ical/ c \         "node-ical\"\:\"^0.12.1\",' < package.json >new_package.json
       rm package.json
       mv new_package.json package.json
-	fi
-	echo -e "\e[96mInstalling dependencies ...\e[90m" | tee -a $logfile
-	rm package-lock.json 2>/dev/null
-	npm_i_r=$(npm install $forced_arch --only=prod)
+    fi
+    echo -e "\e[96mInstalling dependencies ...\e[90m" | tee -a $logfile
+    rm package-lock.json 2>/dev/null
+    npm_i_r=$(npm install $forced_arch --only=prod 2>&1)
     npm_i_rc=$?
     # add the npm install messages to the logfile
   	echo $npm_i_r >> $logfile
