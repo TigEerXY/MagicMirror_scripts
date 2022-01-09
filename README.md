@@ -93,21 +93,21 @@ pm2 status
 
 Restarting your MagicMirror
 ````bash
-pm2 restart mm
+pm2 restart MagicMirror
 ````
 
 Stopping your MagicMirror
 ````bash
-pm2 stop mm
+pm2 stop MagicMirror
 ````
 
 Show the MagicMirror logs
 ````bash
-pm2 logs mm
+pm2 logs MagicMirror
 ````
 
 Show the MagicMirror process information
 ````bash
-pm2 show mm
+pm2 show MagicMirror
 ````
 
