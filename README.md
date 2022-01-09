@@ -62,3 +62,20 @@ fixuppm2.sh, copy/paste this line into the terminal window on your device
 ````bash
 bash -c "$(curl -sL https://raw.githubusercontent.com/sdetweil/MagicMirror_scripts/master/fixuppm2.sh)"
 ````
+
+````bash
+Updating Magic Mirror
+bash -c git pull && npm install
+
+If you are getting
+"error: Your local changes to the following files would be overwritten by merge:
+        installers/mm.sh
+        package-lock.json
+Please commit your changes or stash them before you merge."
+f you want remove all local changes - including files that are untracked by git - from your working copy, simply stash them:
+bash -c git stash push --include-untracked
+
+If you don't need them anymore, you now can drop that stash:
+bash -c git stash drop
+
+````
