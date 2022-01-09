@@ -91,6 +91,11 @@ Show running instances
 pm2 status
 ````
 
+*** Remember to SAVE PM2 if instance has been modified
+````bash
+pm2 status
+````
+
 Restarting your MagicMirror
 ````bash
 pm2 restart MagicMirror
