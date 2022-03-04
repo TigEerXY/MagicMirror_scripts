@@ -15,8 +15,9 @@ git_active_lock='./.git/index.lock'
 lf=$'\n'
 git_user_name=
 git_user_email=
-NODE_TESTED="v14.0.0"
-NPM_TESTED="V6.0.0"
+NODE_TESTED="v16.9.1"
+NPM_TESTED="V7.11.2"
+NODE_STABLE_BRANCH="${NODE_TESTED:1:2}.x"
 known_list="request valid-url"
 
 
@@ -94,7 +95,6 @@ if [ -d ~/$mfn ]; then
 		echo doing test run = false | tee -a $logfile
 	fi
 
-
 	echo update log will be in $logfile
 
 	# Check if we need to install or upgrade Node.js.
@@ -109,13 +109,13 @@ if [ -d ~/$mfn ]; then
 		fi
 		echo -e "\e[0mMinimum Node version: \e[1m$NODE_TESTED\e[0m" | tee -a $logfile
 		echo -e "\e[0mInstalled Node version: \e[1m$NODE_CURRENT\e[0m" | tee -a $logfile
-		if verlte $NODE_CURRENT $NODE_TESTED; then
+		if verlt $NODE_CURRENT $NODE_TESTED; then
 			echo -e "\e[96mNode should be upgraded.\e[0m" | tee -a $logfile
 			NODE_INSTALL=true
 
 			# Check if a node process is currenlty running.
 			# If so abort installation.
-			if pgrep "node" > /dev/null; then
+			if pidof "node" > /dev/null; then
 				echo -e "\e[91mA Node process is currently running. Can't upgrade." | tee -a $logfile
 				echo "Please quit all Node processes and restart the installer." | tee -a $logfile
 				echo $(ps -ef | grep node | grep -v color) | tee -a $logfile
@@ -134,14 +134,13 @@ if [ -d ~/$mfn ]; then
 	if $NODE_INSTALL; then
 		if [ $doinstalls == $true ]; then
 			echo -e "\e[96mInstalling Node.js ...\e[90m" | tee -a $logfile
-
+            sudo apt-get --allow-releaseinfo-change update >>$logfile
 			# Fetch the latest version of Node.js from the selected branch
 			# The NODE_STABLE_BRANCH variable will need to be manually adjusted when a new branch is released. (e.g. 7.x)
 			# Only tested (stable) versions are recommended as newer versions could break MagicMirror.
 			if [ $mac == 'Darwin' ]; then
 			  brew install node
 			else
-				NODE_STABLE_BRANCH="14.x"
 				# sudo apt-get install --only-upgrade libstdc++6
 				node_info=$(curl -sL https://deb.nodesource.com/setup_$NODE_STABLE_BRANCH | sudo -E bash - )
 				echo Node release info = $node_info >> $logfile
@@ -153,15 +152,20 @@ if [ -d ~/$mfn ]; then
 					sudo apt-get install -y --only-upgrade libstdc++6 >> $logfile
 					# have to do it manually
 					ARM1=$ARM
-					node_vnum=$(echo $NODE_STABLE_BRANCH | awk -F. '{print $1}')
-					if [ $ARM == 'x86_64' ]; then
-						ARM1= x64
-					fi
-					# get the highest release number in the stable branch line for this processor architecture
-					node_ver=$(curl -sL https://nodejs.org/download/release/index.tab | grep $ARM1 | grep -m 1 v$node_vnum | awk '{print $1}')
-					echo "latest release in the $NODE_STABLE_BRANCH family for $ARM is $node_ver" >> $logfile
-					# download that file
-					curl -sL https://nodejs.org/download/release/v$node_ver/node-v$node_ver-linux-$ARM1.tar.gz >node_release-$node_ver.tar.gz
+	                                if [ $ARM == 'armv6l' ]; then 
+        	                                curl -sL https://unofficial-builds.nodejs.org/download/release/${NODE_TESTED}/node-${NODE_TESTED}-linux-armv6l.tar.gz >node_release-${NODE_TESTED}.tar.gz
+                	                        node_ver=$NODE_TESTED
+                        	        else
+						node_vnum=$(echo $NODE_STABLE_BRANCH | awk -F. '{print $1}')
+						if [ $ARM == 'x86_64' ]; then
+							ARM1= x64
+						fi
+						# get the highest release number in the stable branch line for this processor architecture
+						node_ver=$(curl -sL https://nodejs.org/download/release/index.tab | grep $ARM1 | grep -m 1 v$node_vnum | awk '{print $1}')
+						echo "latest release in the $NODE_STABLE_BRANCH family for $ARM is $node_ver" >> $logfile
+						# download that file
+						curl -sL https://nodejs.org/download/release/v$node_ver/node-v$node_ver-linux-$ARM1.tar.gz >node_release-$node_ver.tar.gz
+					fi 
 					cd /usr/local
 					echo using release tar file = node_release-$node_ver.tar.gz >> $logfile
 					sudo tar --strip-components 1 -xzf  $HOME/node_release-$node_ver.tar.gz
@@ -190,13 +194,13 @@ if [ -d ~/$mfn ]; then
 		NPM_CURRENT='V'$(npm -v)
 		echo -e "\e[0mMinimum npm version: \e[1m$NPM_TESTED\e[0m" | tee -a $logfile
 		echo -e "\e[0mInstalled npm version: \e[1m$NPM_CURRENT\e[0m" | tee -a $logfile
-		if verlte $NPM_CURRENT $NPM_TESTED; then
+		if verlt $NPM_CURRENT $NPM_TESTED; then
 			echo -e "\e[96mnpm should be upgraded.\e[0m" | tee -a $logfile
 			NPM_INSTALL=true
 
 			# Check if a node process is currently running.
 			# If so abort installation.
-			if pgrep "npm" > /dev/null; then
+			if pidof "npm" > /dev/null; then
 				echo -e "\e[91mA npm process is currently running. Can't upgrade." | tee -a $logfile
 				echo "Please quit all npm processes and restart the installer." | tee -a $logfile
 				exit;
@@ -227,7 +231,7 @@ if [ -d ~/$mfn ]; then
 			fi
 			# update to the latest.
 			echo upgrading npm to latest >> $logfile
-			sudo npm i -g npm@6  >>$logfile
+			sudo npm i -g npm@${NPM_TESTED:1:1}  >>$logfile
 			echo -e "\e[92mnpm installation Done! version=V$(npm -v)\e[0m" | tee -a $logfile
 		else
 			echo -e "\e[96mnpm upgrade defered, doing test run  ...\e[90m" | tee -a $logfile
@@ -320,7 +324,7 @@ if [ -d ~/$mfn ]; then
 
 		  # get the local and remote package.json versions
 			local_version=$(grep -m1 version package.json | awk -F\" '{print $4}' | awk -F-  '{print $1}')
-			remote_version=$(curl -s https://raw.githubusercontent.com/MichMich/MagicMirror/master/package.json | grep -m1 version | awk -F\" '{print $4}')
+			remote_version=$(curl -sL https://raw.githubusercontent.com/MichMich/MagicMirror/master/package.json | grep -m1 version | awk -F\" '{print $4}')
 
 			# if on 2.9
 			if [ $local_version == '2.9.0' ]; then
@@ -340,7 +344,7 @@ if [ -d ~/$mfn ]; then
 
 				# get the latest upgrade
 				echo fetching latest revisions | tee -a $logfile
-				LC_ALL=C git fetch $remote >/dev/null
+				LC_ALL=C git fetch $remote &>/dev/null
 				rc=$?
 				echo git fetch rc=$rc >>$logfile
 				if [ $rc -eq 0 ]; then
@@ -482,6 +486,12 @@ if [ -d ~/$mfn ]; then
 										curl -sL https://raw.githubusercontent.com/sdetweil/MagicMirror_scripts/master/run-start.sh >run-start.sh
 									    chmod +x run-start.sh
 									  fi
+								          # on armv6l, new OS's have a bug in browser support
+								          # install older chromium if not present
+									  v=$(uname -r); v=${v:0:1}
+									  if [ "$(which chromium-browser)." == '.' -a ${v:0:1} -ne 4 ]; then 
+								                sudo apt install -y chromium-browser >>$logfile
+								          fi 
 									fi
 								    if [ $remote_version == '2.13.0' ]; then
 								      # fix downlevel node-ical
